@@ -14,27 +14,41 @@ builder.Services.AddControllers();
 
 builder.Services.AddDistributedMemoryCache();
 
-//builder.Services.AddSession(options =>
-//{
-//    options.IdleTimeout = TimeSpan.FromHours(40);
-//    options.Cookie.HttpOnly = true;
-//    options.Cookie.IsEssential = true;
-//});
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(40);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])
-            )
-        };
-    });
+//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//    .AddJwtBearer(options =>
+//    {
+//        var jwtKey = builder.Configuration["Jwt:Key"];
+//        var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+//        var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+//        if (string.IsNullOrWhiteSpace(jwtKey))
+//            throw new InvalidOperationException("JWT key is missing in configuration.");
+//        if (string.IsNullOrWhiteSpace(jwtIssuer))
+//            throw new InvalidOperationException("JWT issuer is missing in configuration.");
+//        if (string.IsNullOrWhiteSpace(jwtAudience))
+//            throw new InvalidOperationException("JWT audience is missing in configuration.");
+
+//        options.TokenValidationParameters = new TokenValidationParameters
+//        {
+//            ValidateIssuer = true,
+//            ValidateAudience = true,
+//            ValidateLifetime = true,
+//            ValidateIssuerSigningKey = true,
+//            ValidIssuer = jwtIssuer,
+//            ValidAudience = jwtAudience,
+//            IssuerSigningKey = new SymmetricSecurityKey(
+//               Encoding.UTF8.GetBytes(jwtKey)
+//            ),
+//            ClockSkew = TimeSpan.FromMinutes(1)
+//        };
+//    });
 
 
 // Add CORS
@@ -58,19 +72,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() { Title = "NewECommerce_Project API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme.",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT"
-    });
-});
+//builder.Services.AddSwaggerGen(c =>
+//{
+//    c.SwaggerDoc("v1", new() { Title = "NewECommerce_Project API", Version = "v1" });
+//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//    {
+//        Description = "JWT Authorization header using the Bearer scheme.",
+//        Name = "Authorization",
+//        In = ParameterLocation.Header,
+//        Type = SecuritySchemeType.Http,
+//        Scheme = "bearer",
+//        BearerFormat = "JWT"
+//    });
+//});
 
 var app = builder.Build();
 
@@ -86,11 +100,9 @@ app.UseDeveloperExceptionPage();
 // Use CORS
 app.UseCors("AllowAngular");
 app.UseRouting();
-//app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
-
-
+app.UseSession();
 app.MapControllers();
 
 app.Run();

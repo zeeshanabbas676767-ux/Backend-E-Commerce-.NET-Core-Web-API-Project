@@ -9,6 +9,7 @@ using NewECommerce_Project.DTOs;
 using NewECommerce_Project.Models;
 using Microsoft.AspNetCore.Identity;
 
+
 namespace NewECommerce_Project.Controllers
 {
     [ApiController]
@@ -41,20 +42,57 @@ namespace NewECommerce_Project.Controllers
             if (_context.Users.Any(u => u.Email == dto.Email))
                 return BadRequest("Email already exists");
 
-           
             var user = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 CreatedAt = DateTime.Now
             };
+
             var hasher = new PasswordHasher<User>();
             user.PasswordHash = hasher.HashPassword(user, dto.Password);
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { user = new { user.Id, user.FullName, user.Email } });
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("UserFullName", user.FullName);
+            HttpContext.Session.SetString("UserEmail", user.Email);
+
+            // 🔐 AUTO-LOGIN PART (JWT generation)
+            //    var tokenHandler = new JwtSecurityTokenHandler();
+
+            //    var jwtKey = _config["Jwt:Key"];
+            //    if (string.IsNullOrWhiteSpace(jwtKey))
+            //        throw new InvalidOperationException("JWT key missing");
+
+            //    var key = Encoding.UTF8.GetBytes(jwtKey);
+
+            //    var tokenDescriptor = new SecurityTokenDescriptor
+            //    {
+            //        Subject = new ClaimsIdentity(new[]
+            //        {
+            //    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            //    new Claim(ClaimTypes.Email, user.Email),
+            //    new Claim(ClaimTypes.Name, user.FullName)
+            //}),
+            //        Expires = DateTime.UtcNow.AddYears(20),
+            //        SigningCredentials = new SigningCredentials(
+            //            new SymmetricSecurityKey(key),
+            //            SecurityAlgorithms.HmacSha256Signature
+            //        )
+            //    };
+
+            //var token = tokenHandler.CreateToken(tokenDescriptor);
+            //var jwtToken = tokenHandler.WriteToken(token);
+
+            return Ok(new
+            {
+                user = new { user.Id, user.FullName, user.Email },
+                //token = jwtToken
+            });
         }
+
 
         [HttpPost("login")]
         public IActionResult Login(LoginDto dto)
@@ -69,32 +107,42 @@ namespace NewECommerce_Project.Controllers
             if (result == PasswordVerificationResult.Failed)
                 return Unauthorized();
 
+            HttpContext.Session.SetInt32("UserId", user.Id);
+            HttpContext.Session.SetString("UserFullName", user.FullName);
+            HttpContext.Session.SetString("UserEmail", user.Email);
+            //    var tokenHandler = new JwtSecurityTokenHandler();
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var jwtKey = _config["Jwt:Key"];
-            if (string.IsNullOrWhiteSpace(jwtKey))
-                throw new InvalidOperationException("JWT key is missing in appsettings.json");
-
-            var key = Encoding.UTF8.GetBytes(jwtKey);
+            //    var jwtKey = _config["Jwt:Key"];
+            //    var jwtIssuer = _config["Jwt:Issuer"];
+            //    var jwtAudience = _config["Jwt:Audience"];
 
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.FullName),
-        }),
-                Expires = DateTime.UtcNow.AddHours(24),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
+            //    if (string.IsNullOrWhiteSpace(jwtKey))
+            //        throw new InvalidOperationException("JWT key is missing in appsettings.json");
+            //    if (string.IsNullOrWhiteSpace(jwtIssuer))
+            //        throw new InvalidOperationException("JWT issuer is missing in appsettings.json");
+            //    if (string.IsNullOrWhiteSpace(jwtAudience))
+            //        throw new InvalidOperationException("JWT audience is missing in appsettings.json");
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var jwtToken = tokenHandler.WriteToken(token);
+            //    var key = Encoding.UTF8.GetBytes(jwtKey);
 
-            return Ok(new { user = new { user.Id, user.FullName, user.Email }, token = jwtToken });
+
+            //    var tokenDescriptor = new SecurityTokenDescriptor
+            //    {
+            //        Subject = new ClaimsIdentity(new[]
+            //        {
+            //    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            //    new Claim(ClaimTypes.Email, user.Email),
+            //    new Claim(ClaimTypes.Name, user.FullName),
+            //}),
+            //        Expires = DateTime.UtcNow.AddYears(20),
+            //        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            //    };
+
+            //    var token = tokenHandler.CreateToken(tokenDescriptor);
+            //    var jwtToken = tokenHandler.WriteToken(token);
+
+            return Ok(new { user = new { user.Id, user.FullName, user.Email }/*, token = jwtToken*/ });
         }
 
 
