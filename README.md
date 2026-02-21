@@ -1,3 +1,3 @@
 
 Home page:
-![home page](screenshots/screenshot-595.png) 
+![Home page](NewECommerce_Project/Screenshots/Screenshot-595.png) 
